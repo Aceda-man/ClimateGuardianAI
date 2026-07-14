@@ -1,5 +1,12 @@
 import streamlit as st
 
+from utils.helpers import load_locations
+from utils.auth import (
+    initialize_session,
+    register_page,
+    login_page
+)
+
 
 st.set_page_config(
     page_title="ClimateGuardian AI",
@@ -7,63 +14,99 @@ st.set_page_config(
 )
 
 
-st.title("🌍 ClimateGuardian AI")
+initialize_session()
 
-st.subheader(
-    "AI-powered Climate Resilience Platform for Nigerian Communities"
-)
+locations = load_locations()
 
 
-st.write(
-"""
-Helping communities prepare for climate risks,
-protect livelihoods, and respond to disasters.
-"""
-)
+if st.session_state.user is None:
 
 
-menu = st.sidebar.selectbox(
-    "Navigate",
-    [
-        "Dashboard",
-        "Report Incident",
-        "AI Assistant",
-        "Community"
-    ]
-)
-
-
-if menu == "Dashboard":
-
-    st.header("Community Climate Dashboard")
-
-    st.info(
-        "Select a Nigerian location to view climate risk."
+    choice = st.radio(
+        "Welcome to ClimateGuardian AI",
+        [
+            "Register",
+            "Login"
+        ]
     )
 
 
-elif menu == "Report Incident":
+    if choice == "Register":
 
-    st.header("Report Climate Incident")
+        register_page(
+            locations
+        )
+
+
+    else:
+
+        login_page()
+
+
+
+else:
+
+
+    user = st.session_state.user
+
+
+    st.title(
+        "🌍 ClimateGuardian AI"
+    )
+
 
     st.write(
-        "Flood, drought, livestock loss, property damage."
+        f"""
+        Welcome {user['name']} 👋
+
+        📍 {user['community']},
+        {user['lga']},
+        {user['state']}
+
+        👤 {user['user_type']}
+        """
     )
 
 
-elif menu == "AI Assistant":
-
-    st.header("ClimateGuardian Assistant")
-
-    st.write(
-        "Gemma AI will be connected here."
+    page = st.radio(
+        "Navigate",
+        [
+            "Dashboard",
+            "Report Incident",
+            "AI Assistant",
+            "Community"
+        ]
     )
 
 
-elif menu == "Community":
+    if page == "Dashboard":
 
-    st.header("Community Reports")
+        st.header(
+            "Climate Dashboard"
+        )
 
-    st.write(
-        "Local climate information sharing."
-    )
+
+        st.info(
+            "Climate monitoring will appear here."
+        )
+
+
+    elif page == "Report Incident":
+
+        st.header(
+            "Report Climate Incident"
+        )
+
+
+    elif page == "AI Assistant":
+
+        st.header(
+            "Gemma AI Assistant"
+        )
+
+
+    elif page == "Community":
+
+        st.header(
+            "Community Dashboard"
+        )
