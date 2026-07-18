@@ -4,109 +4,156 @@ from utils.helpers import load_locations
 from utils.auth import (
     initialize_session,
     register_page,
-    login_page
+    login_page,
+    logout
 )
 
+from views.dashboard import show_dashboard
+from views.report import show_report_page
+from views.community import show_community_page
+from views.assistant import show_assistant_page
+from views.settings import show_settings_page
+
+
+# ---------------------------------------------------
+# PAGE CONFIG
+# ---------------------------------------------------
 
 st.set_page_config(
     page_title="ClimateGuardian AI",
-    page_icon="🌍"
+    page_icon="🌍",
+    layout="wide"
 )
-
 
 initialize_session()
 
 locations = load_locations()
 
 
+# ===================================================
+# LANDING PAGE (NOT LOGGED IN)
+# ===================================================
+
 if st.session_state.user is None:
 
+    left, right = st.columns([1.7, 1])
 
-    choice = st.radio(
-        "Welcome to ClimateGuardian AI",
-        [
-            "Register",
-            "Login"
-        ]
-    )
+    # ---------------- LEFT SIDE ----------------
 
+    with left:
 
-    if choice == "Register":
+        st.title("🌍 ClimateGuardian AI")
 
-        register_page(
-            locations
+        st.subheader("Community Climate Intelligence")
+
+        st.markdown(
+            """
+### Protecting Nigerian Communities Through AI
+
+ClimateGuardian AI is an offline-first platform that helps
+communities prepare for, respond to and recover from
+climate disasters.
+
+### Who can use ClimateGuardian AI?
+
+🌱 Crop Farmers
+
+🐄 Livestock Farmers
+
+🐟 Fish Farmers
+
+🏠 Community Residents
+
+---
+
+### Features
+
+✅ Community Incident Reporting
+
+✅ Climate Monitoring
+
+✅ Disaster Intelligence
+
+✅ Offline AI (Gemma)
+
+✅ Community Dashboard
+
+---
+
+*"Building Climate-Resilient Communities Across Nigeria."*
+"""
         )
 
+    # ---------------- RIGHT SIDE ----------------
 
-    else:
+    with right:
 
-        login_page()
+        st.markdown("## Welcome")
+
+        auth = st.radio(
+            "",
+            ["Login", "Create Account"],
+            horizontal=True,
+            key="landing_auth"
+        )
+
+        st.divider()
+
+        if auth == "Login":
+            login_page()
+
+        else:
+            register_page(locations)
 
 
+# ===================================================
+# USER LOGGED IN
+# ===================================================
 
 else:
-
-
     user = st.session_state.user
 
+    st.sidebar.title("🌍 ClimateGuardian AI")
+    st.sidebar.caption("Community Climate Intelligence")
 
-    st.title(
-        "🌍 ClimateGuardian AI"
-    )
+    st.sidebar.divider()
 
+    st.sidebar.success(f"👤 {user['full_name']}")
 
-    st.write(
-        f"""
-        Welcome {user['name']} 👋
+    st.sidebar.write(f"📍 {user['community']}")
+    st.sidebar.write(f"🏙 {user['lga']}, {user['state']}")
+    st.sidebar.write(f"🌾 {user['user_type']}")
 
-        📍 {user['community']},
-        {user['lga']},
-        {user['state']}
+    st.sidebar.divider()
 
-        👤 {user['user_type']}
-        """
-    )
-
-
-    page = st.radio(
-        "Navigate",
+    page = st.sidebar.radio(
+        "Navigation",
         [
             "Dashboard",
             "Report Incident",
+            "Community",
             "AI Assistant",
-            "Community"
-        ]
+            "Settings"
+        ],
+        key="navigation"
     )
 
+    st.sidebar.divider()
+
+    if st.sidebar.button("🚪 Logout"):
+        logout()
 
     if page == "Dashboard":
-
-        st.header(
-            "Climate Dashboard"
-        )
-
-
-        st.info(
-            "Climate monitoring will appear here."
-        )
-
+        show_dashboard(user)
 
     elif page == "Report Incident":
-
-        st.header(
-            "Report Climate Incident"
-        )
-
-
-    elif page == "AI Assistant":
-
-        st.header(
-            "Gemma AI Assistant"
-        )
-
+        show_report_page(user)
 
     elif page == "Community":
+        show_community_page(user)
 
-        st.header(
-            "Community Dashboard"
-        )
+    elif page == "AI Assistant":
+        show_assistant_page(user)
+
+    elif page == "Settings":
+        show_settings_page(user)
