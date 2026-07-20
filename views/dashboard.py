@@ -1,24 +1,45 @@
 import streamlit as st
+import plotly.express as px
+import pandas as pd
 
-from database.reports import report_statistics
+from database.reports import (
+    report_statistics,
+    get_latest_reports,
+    reports_by_severity,
+    reports_by_type
+)
+from services.risk_engine import calculate_risk
+
+from services.trust_engine import get_badge
+from services.advisory_engine import generate_advisory
+from services.weather import get_weather
 
 
 def show_dashboard(user):
 
     stats = report_statistics()
 
+    risk = calculate_risk(
+        stats["total_reports"],
+        stats["critical_reports"]
+    )
+
+    weather = get_weather(user["state"])
+
+    advisory = generate_advisory(risk, weather)
+
     st.title("🌍 ClimateGuardian AI")
 
     st.subheader(f"Welcome back, {user['full_name']} 👋")
 
     st.write(
-        "Monitor climate risks, community reports and environmental conditions in your area."
+        "Monitor climate risks, environmental hazards and community reports in real time."
     )
 
     st.divider()
 
     # =====================================
-    # QUICK STATISTICS
+    # TOP METRICS
     # =====================================
 
     col1, col2, col3, col4 = st.columns(4)
@@ -37,25 +58,96 @@ def show_dashboard(user):
 
     with col3:
         st.metric(
-            "🌧 Flood Risk",
-            "Low"
+            "🛰 Community Risk",
+            risk["status"]
         )
 
     with col4:
-        st.metric(
-            "🤖 AI Status",
-            "Offline"
-        )
+        if weather:
+            st.metric(
+                "🌡 Temperature",
+                f"{weather['temperature']}°C"
+            )
+        else:
+            st.metric(
+                "🌡 Temperature",
+                "--"
+            )
+
+    st.divider()
+
+    # =====================================
+    # RISK MONITOR
+    # =====================================
+
+    st.subheader("🛰 Live Community Risk Monitor")
+
+    progress = min(risk["score"], 100)
+
+    st.progress(progress)
+
+    st.write(f"### Risk Score: **{risk['score']}/100**")
+
+    if risk["score"] < 20:
+        st.success("Community currently has a LOW climate risk.")
+
+    elif risk["score"] < 50:
+        st.warning("Community should remain alert.")
+
+    elif risk["score"] < 80:
+        st.warning("High climate risk detected.")
+
+    else:
+        st.error("Critical community risk detected.")
 
     st.divider()
 
     left, right = st.columns([2, 1])
 
+    st.divider()
+
+    st.subheader("🌤 Current Weather")
+
+    if weather:
+
+        with st.container(border=True):
+
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "🌡 Temperature",
+                f"{weather['temperature']}°C"
+            )
+
+            c2.metric(
+                "💧 Humidity",
+                f"{weather['humidity']}%"
+            )
+
+            c3.metric(
+                "💨 Wind",
+                f"{weather['wind']} km/h"
+            )
+
+    else:
+
+        st.info("Weather service unavailable.")
+
     # =====================================
-    # LEFT COLUMN
+    # LEFT PANEL
     # =====================================
 
     with left:
+
+        st.subheader("📢 Government Safety Advisory")
+
+        st.success(
+            f"{advisory['icon']} Risk Level: {advisory['level']}"
+        )
+
+        st.write(advisory["message"])
+
+        st.divider()
 
         st.subheader("📢 Community Situation")
 
@@ -68,58 +160,207 @@ def show_dashboard(user):
         else:
 
             st.warning(
-                f"There are currently **{stats['total_reports']}** reported incidents."
+                f"{stats['total_reports']} incident(s) have been reported."
             )
 
             if stats["critical_reports"] > 0:
 
                 st.error(
-                    f"⚠ {stats['critical_reports']} report(s) are marked as CRITICAL."
+                    f"{stats['critical_reports']} report(s) are CRITICAL."
                 )
 
         st.divider()
 
-        st.subheader("📰 Community Updates")
+        st.subheader("📰 Community Intelligence")
 
-        st.info(
-            """
-Reports submitted by residents will appear here.
+        reports = get_latest_reports()
 
-In the next stage this section will display:
+        if len(reports) == 0:
 
-• Latest reports
+            st.info(
+                "No community reports have been submitted yet."
+            )
 
-• Images
+        else:
 
-• AI summaries
+            for report in reports:
 
-• Community verification
+                with st.container(border=True):
 
-• Time of report
-"""
-        )
+                    st.markdown(f"### 🚨 {report['title']}")
 
-    # =====================================
-    # RIGHT COLUMN
-    # =====================================
+                    st.caption(
+                        f"{report['incident_type']} • {report['created_at']}"
+                    )
 
-    with right:
+                    st.write(
+                        f"**Incident:** {report['incident_type']}"
+                    )
 
-        st.subheader("👤 My Profile")
+                    st.write(
+                        f"📍 {report['community']}, {report['lga']}"
+                    )
 
-        st.write(f"**Name:** {user['full_name']}")
-        st.write(f"**Email:** {user['email']}")
-        st.write(f"**Role:** {user['user_type']}")
-        st.write(f"**State:** {user['state']}")
-        st.write(f"**LGA:** {user['lga']}")
-        st.write(f"**Community:** {user['community']}")
+                    st.caption(
+                        f"👤 Reported by {report['full_name']}"
+                    )
+
+                    st.write(report["description"])
+                    if report["image_path"]:
+                        st.image(
+                            report["image_path"],
+                            use_container_width=True
+                        )
+
+                    severity = report["severity"]
+
+                    if severity == "Critical":
+                        st.error("🔴 Critical")
+                    elif severity == "High":
+                        st.warning("🟠 High")
+                    elif severity == "Moderate":
+                        st.info("🟡 Moderate")
+                    else:
+                        st.success("🟢 Low")
 
         st.divider()
 
-        st.subheader("🤖 Gemma AI")
+    st.divider()
 
-        st.warning("Offline")
+    st.header("📊 Incident Analytics")
 
-        st.caption(
-            "Gemma will analyze reports during the hackathon."
-        )
+    severity_data = reports_by_severity()
+    type_data = reports_by_type()
+
+    left, right = st.columns(2)
+
+    # ====================================
+    # Severity Chart
+    # ====================================
+
+    with left:
+
+        st.subheader("Reports by Severity")
+
+        if severity_data:
+
+            df = pd.DataFrame(
+                severity_data,
+                columns=["Severity", "Reports"]
+            )
+
+            fig = px.bar(
+                df,
+                x="Severity",
+                y="Reports",
+                text="Reports",
+                color="Severity"
+            )
+
+            fig.update_layout(
+                height=350,
+                showlegend=False
+            )
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info("No reports yet.")
+
+    # ====================================
+    # Incident Type Chart
+    # ====================================
+
+    with right:
+
+        st.subheader("Incident Categories")
+
+        if type_data:
+
+            df = pd.DataFrame(
+                type_data,
+                columns=["Incident", "Reports"]
+            )
+
+            fig = px.pie(
+                df,
+                names="Incident",
+                values="Reports",
+                hole=0.45
+            )
+
+            fig.update_layout(height=350)
+
+            st.plotly_chart(
+                fig,
+                use_container_width=True
+            )
+
+        else:
+
+            st.info("No reports yet.")
+
+
+        # =====================================
+        # RIGHT PANEL
+        # =====================================
+
+        with right:
+
+            st.subheader("👤 My Profile")
+
+            trust = user.get("trust_score", 50)
+
+            # derive and show trust badge
+            badge = get_badge(trust)
+            st.success(badge)
+
+            st.progress(trust / 100)
+
+            st.metric(
+                "🏅 Trust Score",
+                f"{trust}/100"
+            )
+
+            if trust >= 90:
+                st.success("Elite Reporter")
+            elif trust >= 70:
+                st.success("Trusted Member")
+            elif trust >= 40:
+                st.info("Community Member")
+            else:
+                st.warning("New Member")
+
+            st.write(f"**Name:** {user['full_name']}")
+            st.write(f"**Email:** {user['email']}")
+            st.write(f"**Role:** {user['user_type']}")
+            st.write(f"**State:** {user['state']}")
+            st.write(f"**LGA:** {user['lga']}")
+            st.write(f"**Community:** {user['community']}")
+
+            st.divider()
+
+            st.subheader("🤖 Gemma AI")
+
+            st.warning("Offline")
+
+            st.caption(
+                "Gemma will run locally on this computer during the hackathon."
+            )
+
+            st.divider()
+
+            st.subheader("📊 Community Health")
+
+            st.metric(
+                "Community Status",
+                risk["status"]
+            )
+
+            st.divider()
+
+         

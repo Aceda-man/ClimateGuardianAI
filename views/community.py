@@ -1,14 +1,22 @@
 import streamlit as st
 
 from database.reports import get_community_feed
+from database.verifications import (
+    verify_report,
+    verification_statistics
+)
 
+from database.comments import (
+    add_comment,
+    get_comments
+)
 
 def show_community_page(user):
 
     st.title("👥 Community Intelligence")
 
     st.write(
-        "Reports submitted by members of your community."
+        "Verified reports submitted by members of your community."
     )
 
     st.divider()
@@ -30,26 +38,22 @@ def show_community_page(user):
 
         with st.container(border=True):
 
-            st.subheader(
-                f"🚨 {report['incident_type']}"
-            )
+            st.subheader(f"🚨 {report['incident_type']}")
 
             left, right = st.columns([3, 1])
 
             with left:
 
-                st.write(f"**Title:** {report['title']}")
+                st.write(f"### {report['title']}")
+
+                st.write(report["description"])
 
                 st.write(
-                    f"**Description:** {report['description']}"
+                    f"📍 {report['community']}, {report['lga']}, {report['state']}"
                 )
 
                 st.write(
-                    f"📍 {report['community']}, {report['lga']}"
-                )
-
-                st.write(
-                    f"👤 Reported by: {report['full_name']}"
+                    f"👤 Reported by **{report['full_name']}**"
                 )
 
             with right:
@@ -57,16 +61,16 @@ def show_community_page(user):
                 severity = report["severity"]
 
                 if severity == "Critical":
-                    st.error(severity)
+                    st.error("🔴 Critical")
 
                 elif severity == "High":
-                    st.warning(severity)
+                    st.warning("🟠 High")
 
                 elif severity == "Moderate":
-                    st.info(severity)
+                    st.info("🟡 Moderate")
 
                 else:
-                    st.success(severity)
+                    st.success("🟢 Low")
 
             if report["image_path"]:
 
@@ -76,30 +80,132 @@ def show_community_page(user):
                 )
 
             st.caption(
-                f"Reported: {report['created_at']}"
+                f"🕒 Reported: {report['created_at']}"
             )
 
-            st.markdown("---")
+            # ====================================
+            # COMMUNITY VERIFICATION
+            # ====================================
 
-            col1, col2, col3 = st.columns(3)
+            stats = verification_statistics(
+                report["id"]
+            )
 
-            with col1:
+            st.markdown("### Community Verification")
 
-                st.button(
+            c1, c2, c3 = st.columns(3)
+
+            c1.metric(
+                "✅ Confirm",
+                stats["confirm"]
+            )
+
+            c2.metric(
+                "🚩 False",
+                stats["false"]
+            )
+
+            c3.metric(
+                "❓ Unsure",
+                stats["unsure"]
+            )
+
+            st.divider()
+
+            b1, b2, b3 = st.columns(3)
+
+            with b1:
+
+                if st.button(
                     "👍 Confirm",
                     key=f"confirm_{report['id']}"
-                )
+                ):
 
-            with col2:
+                    verify_report(
+                        report["id"],
+                        user["id"],
+                        "CONFIRM"
+                    )
 
-                st.button(
-                    "⚠ Flag",
-                    key=f"flag_{report['id']}"
-                )
+                    st.success("Thanks for confirming.")
 
-            with col3:
+                    st.rerun()
 
-                st.button(
-                    "💬 Comment",
-                    key=f"comment_{report['id']}"
-                )
+            with b2:
+
+                if st.button(
+                    "🚩 False Report",
+                    key=f"false_{report['id']}"
+                ):
+
+                    verify_report(
+                        report["id"],
+                        user["id"],
+                        "FALSE"
+                    )
+
+                    st.warning("Report marked as false.")
+
+                    st.rerun()
+
+            with b3:
+
+                if st.button(
+                    "❓ Unsure",
+                    key=f"unsure_{report['id']}"
+                ):
+
+                    verify_report(
+                        report["id"],
+                        user["id"],
+                        "UNSURE"
+                    )
+
+                    st.info("Marked as unsure.")
+
+                    st.rerun()
+            st.divider()
+
+            st.subheader("💬 Community Discussion")
+
+            comments = get_comments(report["id"])
+
+            if len(comments) == 0:
+
+                st.caption("No comments yet.")
+
+            else:
+
+                for comment in comments:
+
+                    st.info(
+                        f"""
+**{comment['full_name']}**
+
+{comment['comment']}
+
+🕒 {comment['created_at']}
+"""
+                    )
+
+            new_comment = st.text_area(
+                "Write a comment",
+                key=f"comment_{report['id']}"
+            )
+
+            if st.button(
+                "Post Comment",
+                key=f"post_{report['id']}"
+            ):
+
+                if new_comment.strip():
+
+                    add_comment(
+                        report["id"],
+                        user["id"],
+                        new_comment
+                    )
+
+                    st.success("Comment posted.")
+
+                    st.rerun()

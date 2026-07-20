@@ -9,7 +9,7 @@ def show_settings_page(user):
 
     st.subheader("Profile")
 
-    st.write(f"**Name:** {user['name']}")
+    st.write(f"**Name:** {user['full_name']}")
     st.write(f"**Role:** {user['user_type']}")
     st.write(f"**Email:** {user['email']}")
     st.write(

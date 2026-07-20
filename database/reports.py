@@ -227,3 +227,80 @@ def get_community_feed(state, lga):
     conn.close()
 
     return reports
+
+# ============================================
+# LATEST REPORTS
+# ============================================
+
+def get_latest_reports(limit=5):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+            reports.*,
+            users.full_name
+
+        FROM reports
+
+        JOIN users
+            ON reports.user_id = users.id
+
+        ORDER BY reports.created_at DESC
+
+        LIMIT ?
+        """,
+        (limit,)
+    )
+
+    reports = cursor.fetchall()
+
+    conn.close()
+
+    return reports
+
+    # ============================================
+# REPORTS BY SEVERITY
+# ============================================
+
+def reports_by_severity():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT severity, COUNT(*) as total
+        FROM reports
+        GROUP BY severity
+    """)
+
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return data
+
+
+# ============================================
+# REPORTS BY INCIDENT TYPE
+# ============================================
+
+def reports_by_type():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT incident_type, COUNT(*) as total
+        FROM reports
+        GROUP BY incident_type
+        ORDER BY total DESC
+    """)
+
+    data = cursor.fetchall()
+
+    conn.close()
+
+    return data

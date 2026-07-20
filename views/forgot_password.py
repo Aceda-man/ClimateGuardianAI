@@ -11,97 +11,116 @@ def forgot_password_page():
 
     st.title("🔒 Reset Password")
 
-    # -------------------------------
-    # Session Variables
-    # -------------------------------
+    st.write(
+        "Answer your security question to reset your password."
+    )
+
+    # -----------------------------
+    # Step 1 - Email
+    # -----------------------------
     if "reset_email" not in st.session_state:
         st.session_state.reset_email = ""
 
-    if "question_loaded" not in st.session_state:
-        st.session_state.question_loaded = False
+    if "security_verified" not in st.session_state:
+        st.session_state.security_verified = False
 
-    # -------------------------------
-    # Step 1
-    # -------------------------------
-    if not st.session_state.question_loaded:
+    email = st.text_input(
+        "Email Address",
+        value=st.session_state.reset_email
+    )
 
-        with st.form("email_form"):
+    if st.button("Continue"):
 
-            email = st.text_input("Enter your registered Email")
+        question = get_security_question(email)
 
-            submit = st.form_submit_button("Continue")
+        if question is None:
 
-            if submit:
+            st.error("No account found with that email.")
 
-                question = get_security_question(email)
+        else:
 
-                if question:
+            st.session_state.reset_email = email
+            st.session_state.security_question = question
+            st.rerun()
 
-                    st.session_state.reset_email = email
-                    st.session_state.security_question = question
-                    st.session_state.question_loaded = True
+    # -----------------------------
+    # Step 2 - Security Question
+    # -----------------------------
+    if "security_question" in st.session_state:
 
-                    st.rerun()
+        st.divider()
 
-                else:
+        st.write(
+            f"**Security Question:** {st.session_state.security_question}"
+        )
 
-                    st.error("No account found with that email.")
+        answer = st.text_input(
+            "Security Answer",
+            type="password"
+        )
 
-    # -------------------------------
-    # Step 2
-    # -------------------------------
-    else:
+        if st.button("Verify Answer"):
 
-        st.info(st.session_state.security_question)
+            if verify_security_answer(
+                st.session_state.reset_email,
+                answer
+            ):
 
-        with st.form("reset_form"):
+                st.session_state.security_verified = True
+                st.success("Security answer verified.")
+                st.rerun()
 
-            answer = st.text_input(
-                "Security Answer",
-                type="password"
-            )
+            else:
 
-            new_password = st.text_input(
-                "New Password",
-                type="password"
-            )
+                st.error("Incorrect security answer.")
 
-            confirm_password = st.text_input(
-                "Confirm Password",
-                type="password"
-            )
+    # -----------------------------
+    # Step 3 - New Password
+    # -----------------------------
+    if st.session_state.security_verified:
 
-            submit = st.form_submit_button(
-                "Reset Password"
-            )
+        st.divider()
 
-            if submit:
+        new_password = st.text_input(
+            "New Password",
+            type="password"
+        )
 
-                if new_password != confirm_password:
+        confirm_password = st.text_input(
+            "Confirm Password",
+            type="password"
+        )
 
-                    st.error("Passwords do not match.")
+        if st.button("Reset Password"):
 
-                elif not verify_security_answer(
+            if new_password != confirm_password:
+
+                st.error("Passwords do not match.")
+
+            else:
+
+                success, message = reset_password(
                     st.session_state.reset_email,
-                    answer
-                ):
+                    new_password
+                )
 
-                    st.error("Incorrect security answer.")
+                if success:
 
-                else:
+                    st.success(message)
 
-                    success, message = reset_password(
-                        st.session_state.reset_email,
-                        new_password
+                    # Clear reset session
+                    for key in [
+                        "reset_email",
+                        "security_question",
+                        "security_verified",
+                        "reset_mode"
+                    ]:
+                        st.session_state.pop(key, None)
+
+                    st.info(
+                        "You can now login with your new password."
                     )
 
-                    if success:
+                else:
 
-                        st.success(message)
-
-                        st.session_state.question_loaded = False
-                        st.session_state.reset_email = ""
-
-                    else:
-
-                        st.error(message)
+                    st.error(message)
