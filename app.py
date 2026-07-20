@@ -8,6 +8,8 @@ from utils.auth import (
     logout
 )
 
+from views.forgot_password import forgot_password_page
+
 from views.dashboard import show_dashboard
 from views.report import show_report_page
 from views.community import show_community_page
@@ -88,22 +90,50 @@ climate disasters.
 
     with right:
 
-        st.markdown("## Welcome")
+        # ---------------- RESET PASSWORD ----------------
 
-        auth = st.radio(
-            "",
-            ["Login", "Create Account"],
-            horizontal=True,
-            key="landing_auth"
-        )
+        if st.session_state.reset_mode:
 
-        st.divider()
+            forgot_password_page()
 
-        if auth == "Login":
-            login_page()
+            st.divider()
+
+            if st.button(
+                "⬅ Back to Login",
+                use_container_width=True
+            ):
+
+                st.session_state.reset_mode = False
+
+                for key in [
+                    "reset_email",
+                    "security_question",
+                    "security_verified"
+                ]:
+                    st.session_state.pop(key, None)
+
+                st.rerun()
+
+        # ---------------- LOGIN / REGISTER ----------------
 
         else:
-            register_page(locations)
+
+            st.markdown("## Welcome")
+
+            auth = st.radio(
+                "",
+                ["Login", "Create Account"],
+                horizontal=True,
+                key="landing_auth"
+            )
+
+            st.divider()
+
+            if auth == "Login":
+                login_page()
+
+            else:
+                register_page(locations)
 
 
 # ===================================================
@@ -111,6 +141,7 @@ climate disasters.
 # ===================================================
 
 else:
+
     user = st.session_state.user
 
     st.sidebar.title("🌍 ClimateGuardian AI")

@@ -98,3 +98,49 @@ def get_reports():
 
 
     return data
+
+from database.database import get_connection
+
+
+def get_latest_reports(limit=5):
+
+    conn = get_connection()
+
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT
+
+            reports.id,
+
+            reports.title,
+
+            reports.incident_type,
+
+            reports.severity,
+
+            reports.community,
+
+            reports.created_at,
+
+            users.full_name
+
+        FROM reports
+
+        JOIN users
+
+        ON reports.user_id = users.id
+
+        ORDER BY reports.created_at DESC
+
+        LIMIT ?
+        """,
+        (limit,)
+    )
+
+    reports = cursor.fetchall()
+
+    conn.close()
+
+    return reports
