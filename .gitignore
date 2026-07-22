@@ -1,0 +1,34 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# Database (never commit real or demo user data)
+climate.db
+climate_guardian.db
+*.db
+*.db-journal
+
+# Uploaded incident evidence images
+uploads/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Environment variables (if you add any API keys later)
+.env
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Kaggle / notebook checkpoints
+.ipynb_checkpoints/
