@@ -188,9 +188,11 @@ def show_community_page(user):
 """
                     )
 
+            comment_key = f"comment_{report['id']}"
+
             new_comment = st.text_area(
                 "Write a comment",
-                key=f"comment_{report['id']}"
+                key=comment_key
             )
 
             if st.button(
@@ -207,5 +209,9 @@ def show_community_page(user):
                     )
 
                     st.success("Comment posted.")
+
+                    # Clear the text box now that the comment is saved,
+                    # otherwise the old text lingers after the rerun.
+                    del st.session_state[comment_key]
 
                     st.rerun()

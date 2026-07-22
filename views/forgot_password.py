@@ -37,6 +37,11 @@ def forgot_password_page():
 
             st.error("No account found with that email.")
 
+            # Clear any stale question/verification from a
+            # previous, different email so it can't linger here.
+            for key in ["security_question", "security_verified"]:
+                st.session_state.pop(key, None)
+
         else:
 
             st.session_state.reset_email = email
@@ -120,6 +125,8 @@ def forgot_password_page():
                     st.info(
                         "You can now login with your new password."
                     )
+
+                    st.rerun()
 
                 else:
 

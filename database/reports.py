@@ -53,6 +53,15 @@ def create_report(
         )
     )
 
+    cursor.execute(
+        """
+        UPDATE users
+        SET reports_submitted = reports_submitted + 1
+        WHERE id=?
+        """,
+        (user_id,)
+    )
+
     conn.commit()
     conn.close()
 
@@ -190,6 +199,30 @@ def report_statistics():
         "critical_reports": critical_reports
     }
 
+
+# ============================================
+# REPORTS IN LAST 24 HOURS
+# ============================================
+
+def reports_last_24h():
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM reports
+        WHERE created_at >= datetime('now', '-1 day')
+        """
+    )
+
+    count = cursor.fetchone()[0]
+
+    conn.close()
+
+    return count
+
 # ============================================
 # COMMUNITY FEED
 # ============================================
@@ -261,7 +294,8 @@ def get_latest_reports(limit=5):
 
     return reports
 
-    # ============================================
+
+# ============================================
 # REPORTS BY SEVERITY
 # ============================================
 

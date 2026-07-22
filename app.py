@@ -50,11 +50,13 @@ if st.session_state.user is None:
 
         st.markdown(
             """
-### Protecting Nigerian Communities Through AI
+### Community Climate Intelligence for Resilient Cities
 
-ClimateGuardian AI is an offline-first platform that helps
-communities prepare for, respond to and recover from
-climate disasters.
+ClimateGuardian AI helps communities detect, report and respond to
+climate and environmental hazards early — turning ground-level
+reports into real-time risk intelligence and safety advisories.
+Every report shared strengthens early warning for the whole
+community and reduces exposure to preventable climate loss.
 
 ### Who can use ClimateGuardian AI?
 
@@ -72,13 +74,13 @@ climate disasters.
 
 ✅ Community Incident Reporting
 
-✅ Climate Monitoring
+✅ Live Community Risk Monitoring
 
-✅ Disaster Intelligence
+✅ Government-Style Safety Advisories
 
-✅ Offline AI (Gemma)
+✅ Offline AI Assistant (Gemma) for on-device guidance
 
-✅ Community Dashboard
+✅ Community-Verified Reporting & Trust Scoring
 
 ---
 
@@ -187,4 +189,4 @@ else:
         show_assistant_page(user)
 
     elif page == "Settings":
-        show_settings_page(user)
+        show_settings_page(user, locations)

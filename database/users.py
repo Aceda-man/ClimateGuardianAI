@@ -269,3 +269,61 @@ def reset_password(email, new_password):
     conn.close()
 
     return True, "Password reset successful."
+
+
+# ==================================================
+# UPDATE SETTINGS
+# ==================================================
+def update_user_settings(user_id, dark_mode, notifications, language):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET dark_mode=?,
+            notifications=?,
+            language=?
+        WHERE id=?
+        """,
+        (
+            dark_mode,
+            notifications,
+            language,
+            user_id
+        )
+    )
+
+    conn.commit()
+    conn.close()
+
+
+# ==================================================
+# UPDATE PROFILE (role + location)
+# ==================================================
+def update_user_profile(user_id, user_type, state, lga, community):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        UPDATE users
+        SET user_type=?,
+            state=?,
+            lga=?,
+            community=?
+        WHERE id=?
+        """,
+        (
+            user_type,
+            state,
+            lga,
+            community,
+            user_id
+        )
+    )
+
+    conn.commit()
+    conn.close()

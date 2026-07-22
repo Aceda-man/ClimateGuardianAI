@@ -1,4 +1,5 @@
 import os
+import uuid
 from pathlib import Path
 
 import streamlit as st
@@ -6,7 +7,9 @@ import streamlit as st
 from database.reports import create_report
 
 
-UPLOAD_FOLDER = "uploads"
+# Absolute path, resolved relative to this file's project root,
+# not to whatever directory `streamlit run` happens to be launched from.
+UPLOAD_FOLDER = Path(__file__).resolve().parent.parent / "uploads"
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -88,9 +91,12 @@ def show_report_page(user):
 
         if image:
 
-            filename = f"{user['id']}_{image.name}"
+            # Unique filename so two uploads with the same original
+            # name (e.g. "IMG_001.jpg") never overwrite each other.
+            extension = Path(image.name).suffix
+            filename = f"{user['id']}_{uuid.uuid4().hex}{extension}"
 
-            filepath = Path(UPLOAD_FOLDER) / filename
+            filepath = UPLOAD_FOLDER / filename
 
             with open(filepath, "wb") as f:
                 f.write(image.getbuffer())

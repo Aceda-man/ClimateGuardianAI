@@ -25,6 +25,27 @@ def get_connection():
 
 
 # ==========================================
+# COLUMN MIGRATION HELPER
+# ==========================================
+# CREATE TABLE IF NOT EXISTS only applies to brand new databases.
+# For a climate.db that already exists on disk (from before the
+# settings feature), this adds any missing columns without
+# touching existing rows or data.
+
+def _add_column_if_missing(cursor, table, column, definition):
+
+    cursor.execute(f"PRAGMA table_info({table})")
+
+    existing_columns = [row["name"] for row in cursor.fetchall()]
+
+    if column not in existing_columns:
+
+        cursor.execute(
+            f"ALTER TABLE {table} ADD COLUMN {column} {definition}"
+        )
+
+
+# ==========================================
 # CREATE DATABASE
 # ==========================================
 
@@ -62,9 +83,32 @@ def create_database():
 
         security_answer TEXT NOT NULL,
 
+        dark_mode INTEGER DEFAULT 0,
+
+        notifications INTEGER DEFAULT 1,
+
+        language TEXT DEFAULT 'English',
+
+        reports_submitted INTEGER DEFAULT 0,
+
+        verified_reports INTEGER DEFAULT 0,
+
+        false_reports INTEGER DEFAULT 0,
+
+        trust_score INTEGER DEFAULT 50,
+
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
+
+    # Safe no-op on a fresh database; fills the gap on an existing one.
+    _add_column_if_missing(cursor, "users", "dark_mode", "INTEGER DEFAULT 0")
+    _add_column_if_missing(cursor, "users", "notifications", "INTEGER DEFAULT 1")
+    _add_column_if_missing(cursor, "users", "language", "TEXT DEFAULT 'English'")
+    _add_column_if_missing(cursor, "users", "reports_submitted", "INTEGER DEFAULT 0")
+    _add_column_if_missing(cursor, "users", "verified_reports", "INTEGER DEFAULT 0")
+    _add_column_if_missing(cursor, "users", "false_reports", "INTEGER DEFAULT 0")
+    _add_column_if_missing(cursor, "users", "trust_score", "INTEGER DEFAULT 50")
 
     # ======================================
     # INCIDENT REPORTS

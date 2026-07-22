@@ -47,6 +47,29 @@ def register_page(locations):
 
     st.subheader("📝 Create Account")
 
+    # ---------------------------------------------------
+    # LOCATION SELECTORS (outside the form so they cascade
+    # live as the user picks State -> LGA -> Community)
+    # ---------------------------------------------------
+
+    state = st.selectbox(
+        "State",
+        list(locations.keys()),
+        key="register_state"
+    )
+
+    lga = st.selectbox(
+        "Local Government Area",
+        list(locations[state].keys()),
+        key="register_lga"
+    )
+
+    community = st.selectbox(
+        "Community",
+        locations[state][lga],
+        key="register_community"
+    )
+
     with st.form(
         "register_form",
         clear_on_submit=True
@@ -72,21 +95,6 @@ def register_page(locations):
         confirm = st.text_input(
             "Confirm Password",
             type="password"
-        )
-
-        state = st.selectbox(
-            "State",
-            list(locations.keys())
-        )
-
-        lga = st.selectbox(
-            "Local Government Area",
-            list(locations[state].keys())
-        )
-
-        community = st.selectbox(
-            "Community",
-            locations[state][lga]
         )
 
         user_type = st.selectbox(

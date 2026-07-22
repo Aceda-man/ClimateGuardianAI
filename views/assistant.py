@@ -11,7 +11,7 @@ def show_assistant_page(user):
 
     st.write(
         f"""
-Hello **{user['name']}** 👋
+Hello **{user['full_name']}** 👋
 
 How can I help you today?
 """
