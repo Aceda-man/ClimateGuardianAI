@@ -126,7 +126,7 @@ def register_page(locations):
 
         submitted = st.form_submit_button(
             "Create Account",
-            use_container_width=True
+            width="stretch"
         )
 
         if submitted:
@@ -185,7 +185,7 @@ def login_page():
 
         submitted = st.form_submit_button(
             "Login",
-            use_container_width=True
+            width="stretch"
         )
 
         if submitted:
@@ -215,7 +215,7 @@ def login_page():
 
     if st.button(
         "Forgot Password",
-        use_container_width=True
+        width="stretch"
     ):
 
         st.session_state.reset_mode = True

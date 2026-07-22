@@ -222,7 +222,7 @@ def show_dashboard(user):
                     if report["image_path"]:
                         st.image(
                             report["image_path"],
-                            use_container_width=True
+                            width="stretch"
                         )
 
                     severity = report["severity"]
@@ -333,7 +333,7 @@ def show_dashboard(user):
 
                 st.plotly_chart(
                     fig,
-                    use_container_width=True
+                    width="stretch"
                 )
 
             else:
@@ -362,7 +362,7 @@ def show_dashboard(user):
 
                 st.plotly_chart(
                     fig,
-                    use_container_width=True
+                    width="stretch"
                 )
 
             else:

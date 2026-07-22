@@ -77,7 +77,7 @@ def show_report_page(user):
 
         submitted = st.form_submit_button(
             "Submit Report",
-            use_container_width=True
+            width="stretch"
         )
 
     if submitted:

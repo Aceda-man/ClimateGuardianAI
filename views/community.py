@@ -76,7 +76,7 @@ def show_community_page(user):
 
                 st.image(
                     report["image_path"],
-                    use_container_width=True
+                    width="stretch"
                 )
 
             st.caption(

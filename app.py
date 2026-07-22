@@ -102,7 +102,7 @@ community and reduces exposure to preventable climate loss.
 
             if st.button(
                 "⬅ Back to Login",
-                use_container_width=True
+                width="stretch"
             ):
 
                 st.session_state.reset_mode = False

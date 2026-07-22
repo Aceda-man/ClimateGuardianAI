@@ -70,7 +70,7 @@ def show_settings_page(user, locations):
 
     if st.button(
         "Save Profile",
-        use_container_width=True,
+        width="stretch",
         key="save_profile"
     ):
 
@@ -130,7 +130,7 @@ def show_settings_page(user, locations):
 
         saved = st.form_submit_button(
             "Save Settings",
-            use_container_width=True
+            width="stretch"
         )
 
     if saved:
